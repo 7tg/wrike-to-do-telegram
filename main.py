@@ -1,6 +1,8 @@
-import requests
-import datetime
 import argparse
+import datetime
+
+import requests
+from requests import Response
 
 URL = "https://www.wrike.com/api/v4/tasks"
 
@@ -31,19 +33,18 @@ def build_daily_string(tasks: list[dict]) -> str:
 
 
 def send_telegram_message(
-    body,
-    chats,
-    telegram_token
-):
-    for chat in chats:
-        params = {
-            'chat_id': chat,
-            'text': body,
-        }
-        res = requests.post(
-            f'https://api.telegram.org/bot{telegram_token}/sendMessage',
-            params=params
-        )
+    body: str,
+    chat: str,
+    telegram_token: str
+) -> Response:
+    params = {
+        'chat_id': chat,
+        'text': body,
+    }
+    return requests.post(
+        f'https://api.telegram.org/bot{telegram_token}/sendMessage',
+        params=params
+    )
 
 
 def main():
@@ -74,7 +75,7 @@ def main():
     daily_str = build_daily_string(tasks)
     send_telegram_message(
         daily_str,
-        [args.telegramChat, ],
+        args.telegramChat,
         args.telegramToken
     )
 
