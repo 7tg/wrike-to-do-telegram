@@ -72,6 +72,9 @@ def main():
         help='Telegram Chat'
     )
     args = parser.parse_args()
+    today = datetime.datetime.now()
+    if today.weekday() > 4:
+        return
     tasks = get_tasks(args.accountId, args.wrikeToken)
     daily_str = build_daily_string(tasks)
     send_telegram_message(
