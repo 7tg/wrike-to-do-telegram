@@ -28,7 +28,7 @@ def get_tasks(account_id: str, wrike_token: str) -> List[dict]:
 def build_daily_string(tasks: List[dict]) -> str:
     today = datetime.datetime.now()
     daily_str = f"{DAY_NAME[today.weekday()]}:\n"
-    daily_str += "\n".join([f"- {task['title']}" for task in reversed(tasks) if not task["subTaskIds"]])
+    daily_str += "\n".join([f"⋆ {task['title']}" for task in reversed(tasks) if not task["subTaskIds"]])
 
     return daily_str
 
