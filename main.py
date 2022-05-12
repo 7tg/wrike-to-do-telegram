@@ -10,7 +10,7 @@ URL = "https://www.wrike.com/api/v4/tasks"
 DAY_NAME = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
-def get_tasks(account_id: str, wrike_token: str) -> list[dict]:
+def get_tasks(account_id: str, wrike_token: str) -> List[dict]:
     query = {
         "responsibles": f'["{account_id}"]',
         "status": "Active",
