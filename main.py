@@ -1,6 +1,6 @@
 import argparse
 import datetime
-from typing import List
+from typing import List, Tuple
 
 import requests
 from requests import Response
@@ -10,11 +10,11 @@ URL = "https://www.wrike.com/api/v4/tasks"
 DAY_NAME = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
-def get_tasks(account_id: str, wrike_token: str) -> List[dict]:
+def get_tasks(account_id: str, wrike_token: str) -> Tuple[List[dict], List[dict]]:
     query = {
         "responsibles": f'["{account_id}"]',
         "status": "Active",
-        "fields": '["subTaskIds"]',
+        "fields": '["subTaskIds", "description", "parentIds"]',
     }
 
     headers = {
@@ -22,13 +22,30 @@ def get_tasks(account_id: str, wrike_token: str) -> List[dict]:
     }
     response = requests.get(URL, params=query, headers=headers)
     response.raise_for_status()
-    return response.json()["data"]
+
+    folders_res = requests.get("https://www.wrike.com/api/v4/folders", headers=headers)
+    folders_res.raise_for_status()
+
+    return response.json()["data"], folders_res.json()["data"]
 
 
-def build_daily_string(tasks: List[dict]) -> str:
+def build_daily_string(tasks: List[dict], folders: List[dict]) -> str:
     today = datetime.datetime.now()
     daily_str = f"{DAY_NAME[today.weekday()]}:\n"
-    daily_str += "\n".join([f"⋆ {task['title']}" for task in reversed(tasks) if not task["subTaskIds"]])
+
+    filtered_tasks = [
+            task
+            for task in reversed(tasks)
+            if not task["subTaskIds"]
+               and "https://gitlab.com" not in task["description"]
+        ]
+    for task in filtered_tasks:
+        task_folders = list(filter(lambda folder: folder["id"] in task["parentIds"], folders))
+        folder_name = ",".join([folder["title"] for folder in task_folders]) if task_folders else None
+
+        task_str = f"- [Link]({task['permalink']}) / {task['title']}"
+        task_str += f" ({folder_name})\n" if folder_name else "\n"
+        daily_str += task_str
 
     return daily_str
 
@@ -75,8 +92,8 @@ def main():
     today = datetime.datetime.now()
     if today.weekday() > 4:
         return
-    tasks = get_tasks(args.accountId, args.wrikeToken)
-    daily_str = build_daily_string(tasks)
+    tasks, folders = get_tasks(args.accountId, args.wrikeToken)
+    daily_str = build_daily_string(tasks, folders)
     send_telegram_message(
         daily_str,
         args.telegramChat,
