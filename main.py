@@ -43,7 +43,7 @@ def build_daily_string(tasks: List[dict], folders: List[dict]) -> str:
         task_folders = list(filter(lambda folder: folder["id"] in task["parentIds"], folders))
         folder_name = ",".join([folder["title"] for folder in task_folders]) if task_folders else None
 
-        task_str = f"- [Link]({task['permalink']}) / {task['title']}"
+        task_str = f"- [{task['title']}]({task['permalink']})"
         task_str += f" ({folder_name})\n" if folder_name else "\n"
         daily_str += task_str
 
